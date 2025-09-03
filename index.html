@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #0f1b2a;
+        }
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-btn {
+            background: #0f1b2a;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: #0f1b2a;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1b2a4a;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #dashboard-frame {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-container" class="login-container">
+        <h1>MediSys</h1>
+        <p>Patient Monitoring System</p>
+        <button id="signIn" class="login-btn">Sign In with AWS Cognito</button>
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Authenticating...</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Frame -->
+    <iframe id="dashboard-frame" src="dashboard.html"></iframe>
+
+    <script type="module">
+        import { UserManager } from "https://cdn.skypack.dev/oidc-client-ts";
+
+        const cognitoAuthConfig = {
+            authority: "https://cognito-idp.eu-north-1.amazonaws.com/eu-north-1_ZwqQkcF1P",
+            client_id: "3dlhoqh4tmt81feuqa968erktk",
+            redirect_uri: "http://localhost:5500",
+            response_type: "code",
+            scope: "phone openid email"
+        };
+
+        const userManager = new UserManager(cognitoAuthConfig);
+
+        // Check if user is already authenticated
+        window.addEventListener('load', async () => {
+            try {
+                const user = await userManager.getUser();
+                if (user && !user.expired) {
+                    showDashboard(user);
+                } else {
+                    // Handle callback if redirected from Cognito
+                    if (window.location.search.includes('code=')) {
+                        document.getElementById('loading').style.display = 'block';
+                        try {
+                            const user = await userManager.signinCallback();
+                            showDashboard(user);
+                        } catch (error) {
+                            console.error('Sign-in callback error:', error);
+                            showLogin();
+                        }
+                    } else {
+                        showLogin();
+                    }
+                }
+            } catch (error) {
+                console.error('Authentication check error:', error);
+                showLogin();
+            }
+        });
+
+        // Sign-in button click
+        document.getElementById('signIn').addEventListener('click', async () => {
+            try {
+                await userManager.signinRedirect();
+            } catch (error) {
+                console.error('Sign-in error:', error);
+                alert('Sign-in failed. Please try again.');
+            }
+        });
+
+        function showLogin() {
+            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('dashboard-frame').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showDashboard(user) {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-frame').style.display = 'block';
+            
+            // Store user tokens globally for the dashboard to access
+            window.userTokens = {
+                access_token: user.access_token,
+                id_token: user.id_token,
+                refresh_token: user.refresh_token,
+                profile: user.profile
+            };
+
+            // Send tokens to dashboard iframe
+            const dashboardFrame = document.getElementById('dashboard-frame');
+            dashboardFrame.onload = () => {
+                dashboardFrame.contentWindow.postMessage({
+                    type: 'AUTH_TOKENS',
+                    tokens: window.userTokens
+                }, '*');
+            };
+        }
+
+        window.logout = async () => {
+            try {
+                // Clear local storage first
+                await userManager.removeUser();
+                
+                // Simple redirect back to login instead of Cognito logout
+                window.location.href = window.location.origin;
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force redirect even if there's an error
+                window.location.href = window.location.origin;
+            }
+        };
+    </script>
+    
+</body>
+</html>

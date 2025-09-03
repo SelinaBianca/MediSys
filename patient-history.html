@@ -1,0 +1,912 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patient History - MediSys</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      background: #0a0e1a;
+      color: #ffffff;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1f2e 0%, #16213e 100%);
+      border: 1px solid #2a3441;
+      border-radius: 4px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .header .subtitle {
+      color: #8892b0;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      position: absolute;
+      right: 24px;
+      top: 24px;
+    }
+
+    .header-btn {
+      background: #1e40af;
+      border: 1px solid #3b82f6;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .header-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    .header-btn.back {
+      background: #059669;
+      border-color: #10b981;
+    }
+
+    .header-btn.back:hover {
+      background: #047857;
+    }
+
+    .filters-section {
+      background: #1a1f2e;
+      border: 1px solid #2a3441;
+      border-radius: 4px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .filters-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 16px;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 500;
+    }
+
+    .filter-input, .filter-select {
+      padding: 12px 16px;
+      background: #0f172a;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 14px;
+      transition: border-color 0.2s ease;
+    }
+
+    .filter-input:focus, .filter-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .filter-input::placeholder {
+      color: #6b7280;
+    }
+
+    .date-range {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .apply-filters-btn, .clear-filters-btn {
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid;
+    }
+
+    .apply-filters-btn {
+      background: #1e40af;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+
+    .apply-filters-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .clear-filters-btn {
+      background: #374151;
+      border-color: #4b5563;
+      color: #ffffff;
+    }
+
+    .clear-filters-btn:hover {
+      background: #4b5563;
+    }
+
+    .results-summary {
+      background: #0f172a;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .results-count {
+      font-size: 14px;
+      color: #8892b0;
+    }
+
+    .export-btn {
+      background: #059669;
+      border: 1px solid #10b981;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .export-btn:hover {
+      background: #047857;
+    }
+
+    .table-container {
+      background: #1a1f2e;
+      border: 1px solid #2a3441;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .patient-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .patient-table thead {
+      background: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .patient-table th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #ffffff;
+      border-bottom: 1px solid #2a3441;
+      white-space: nowrap;
+    }
+
+    .patient-table th:first-child {
+      padding-left: 20px;
+    }
+
+    .patient-table th:last-child {
+      padding-right: 20px;
+    }
+
+    .patient-table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    .patient-table tbody tr:hover {
+      background: #0f172a;
+    }
+
+    .patient-table tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.3);
+    }
+
+    .patient-table td {
+      padding: 12px;
+      border-bottom: 1px solid #2a3441;
+      color: #e2e8f0;
+    }
+
+    .patient-table td:first-child {
+      padding-left: 20px;
+    }
+
+    .patient-table td:last-child {
+      padding-right: 20px;
+    }
+
+    .patient-id {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .vital-value {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+    }
+
+    .vital-value.normal {
+      color: #10b981;
+    }
+
+    .vital-value.warning {
+      color: #f59e0b;
+    }
+
+    .vital-value.critical {
+      color: #ef4444;
+      animation: pulse 2s infinite;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-badge.normal {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+
+    .status-badge.warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+
+    .status-badge.critical {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .timestamp {
+      color: #8892b0;
+      font-size: 13px;
+    }
+
+    .loading, .no-data, .error {
+      padding: 60px;
+      text-align: center;
+      color: #8892b0;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .error {
+      color: #ef4444;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #2a3441;
+      border-top: 2px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      background: #0f172a;
+      border-top: 1px solid #2a3441;
+    }
+
+    .pagination-btn {
+      padding: 8px 12px;
+      background: #1a1f2e;
+      border: 1px solid #2a3441;
+      color: #ffffff;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: #2a3441;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+
+    .pagination-info {
+      color: #8892b0;
+      font-size: 14px;
+      margin: 0 16px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .header-buttons {
+        position: static;
+        margin-top: 16px;
+        justify-content: flex-start;
+      }
+
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .results-summary {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .table-wrapper {
+        font-size: 12px;
+      }
+
+      .patient-table th, .patient-table td {
+        padding: 8px;
+      }
+
+      .pagination {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Patient History</h1>
+      <div class="subtitle">Historical Patient Data & Vital Signs</div>
+      <div class="header-buttons">
+        <button class="header-btn back" id="back-btn">
+          ← Back to Dashboard
+        </button>
+        <button class="header-btn logout" id="logout-btn">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="filters-section">
+      <div class="filters-title">Filter Patient Data</div>
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label class="filter-label">Patient ID</label>
+          <input type="text" class="filter-input" id="patient-id-filter" placeholder="Enter Patient ID...">
+        </div>
+        
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select class="filter-select" id="status-filter">
+            <option value="all">All Statuses</option>
+            <option value="normal">Normal</option>
+            <option value="warning">Warning</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label class="filter-label">Date Range</label>
+          <div class="date-range">
+            <input type="date" class="filter-input" id="date-from">
+            <input type="date" class="filter-input" id="date-to">
+          </div>
+        </div>
+        
+        <div class="filter-group">
+          <label class="filter-label">Heart Rate Range</label>
+          <div class="date-range">
+            <input type="number" class="filter-input" id="hr-min" placeholder="Min BPM">
+            <input type="number" class="filter-input" id="hr-max" placeholder="Max BPM">
+          </div>
+        </div>
+        
+        <div class="filter-group">
+          <label class="filter-label">Oxygen Range</label>
+          <div class="date-range">
+            <input type="number" class="filter-input" id="o2-min" placeholder="Min %">
+            <input type="number" class="filter-input" id="o2-max" placeholder="Max %">
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-actions">
+        <button class="apply-filters-btn" id="apply-filters">Apply Filters</button>
+        <button class="clear-filters-btn" id="clear-filters">Clear All</button>
+      </div>
+    </div>
+
+    <div class="results-summary">
+      <div class="results-count" id="results-count">Loading...</div>
+      <button class="export-btn" id="export-btn">Export to CSV</button>
+    </div>
+
+    <div class="table-container">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div>Loading patient history...</div>
+      </div>
+      
+      <div id="error" class="error" style="display:none;">
+        Failed to load patient history. Please try again.
+      </div>
+      
+      <div id="no-data" class="no-data" style="display:none;">
+        No patient data found matching your criteria.
+      </div>
+      
+      <div id="table-wrapper" class="table-wrapper" style="display:none;">
+        <table class="patient-table">
+          <thead>
+            <tr>
+              <th>Patient ID</th>
+              <th>Timestamp</th>
+              <th>Heart Rate</th>
+              <th>Oxygen Level</th>
+              <th>Status</th>
+              <th>Alerts</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination" id="pagination" style="display:none;">
+        <button class="pagination-btn" id="prev-page">Previous</button>
+        <div class="pagination-info" id="pagination-info"></div>
+        <button class="pagination-btn" id="next-page">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const API_URL = 'https://y7v33u53u2.execute-api.eu-north-1.amazonaws.com/get-recent-alerts';
+    const ITEMS_PER_PAGE = 50;
+
+    // Global state
+    let allPatientData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // DOM elements
+    const elements = {
+      loading: document.getElementById('loading'),
+      error: document.getElementById('error'),
+      noData: document.getElementById('no-data'),
+      tableWrapper: document.getElementById('table-wrapper'),
+      tableBody: document.getElementById('table-body'),
+      pagination: document.getElementById('pagination'),
+      resultsCount: document.getElementById('results-count'),
+      
+      // Filters
+      patientIdFilter: document.getElementById('patient-id-filter'),
+      statusFilter: document.getElementById('status-filter'),
+      dateFrom: document.getElementById('date-from'),
+      dateTo: document.getElementById('date-to'),
+      hrMin: document.getElementById('hr-min'),
+      hrMax: document.getElementById('hr-max'),
+      o2Min: document.getElementById('o2-min'),
+      o2Max: document.getElementById('o2-max'),
+      
+      // Buttons
+      applyFilters: document.getElementById('apply-filters'),
+      clearFilters: document.getElementById('clear-filters'),
+      exportBtn: document.getElementById('export-btn'),
+      backBtn: document.getElementById('back-btn'),
+      logoutBtn: document.getElementById('logout-btn'),
+      
+      // Pagination
+      prevPage: document.getElementById('prev-page'),
+      nextPage: document.getElementById('next-page'),
+      paginationInfo: document.getElementById('pagination-info')
+    };
+
+    // Utility functions
+    function getAlertLevel(heartRate, oxygen) {
+      const hr = parseInt(heartRate);
+      const o2 = parseInt(oxygen);
+      
+      if (hr > 120 || hr < 50 || o2 < 90) return 'critical';
+      if (hr > 100 || hr < 60 || o2 < 95) return 'warning';
+      return 'normal';
+    }
+
+    function generateAlerts(heartRate, oxygen) {
+      const alerts = [];
+      const hr = parseInt(heartRate);
+      const o2 = parseInt(oxygen);
+      
+      if (hr > 120) alerts.push('High HR');
+      if (hr < 50) alerts.push('Low HR');
+      if (o2 < 90) alerts.push('Critical O2');
+      if (o2 < 95 && o2 >= 90) alerts.push('Low O2');
+      
+      return alerts.length > 0 ? alerts.join(', ') : 'None';
+    }
+
+    function formatTimestamp(timestamp) {
+      return new Date(timestamp).toLocaleString();
+    }
+
+    // UI Functions
+    function showLoading() {
+      elements.loading.style.display = 'flex';
+      elements.error.style.display = 'none';
+      elements.noData.style.display = 'none';
+      elements.tableWrapper.style.display = 'none';
+      elements.pagination.style.display = 'none';
+    }
+
+    function showError() {
+      elements.loading.style.display = 'none';
+      elements.error.style.display = 'block';
+      elements.noData.style.display = 'none';
+      elements.tableWrapper.style.display = 'none';
+      elements.pagination.style.display = 'none';
+    }
+
+    function showNoData() {
+      elements.loading.style.display = 'none';
+      elements.error.style.display = 'none';
+      elements.noData.style.display = 'block';
+      elements.tableWrapper.style.display = 'none';
+      elements.pagination.style.display = 'none';
+    }
+
+    function showTable() {
+      elements.loading.style.display = 'none';
+      elements.error.style.display = 'none';
+      elements.noData.style.display = 'none';
+      elements.tableWrapper.style.display = 'block';
+      elements.pagination.style.display = 'flex';
+    }
+
+    function renderTable(data) {
+      if (data.length === 0) {
+        showNoData();
+        return;
+      }
+
+      showTable();
+      
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const pageData = data.slice(startIndex, endIndex);
+      
+      elements.tableBody.innerHTML = pageData.map(patient => {
+        const alertLevel = getAlertLevel(patient.heart_rate, patient.oxygen);
+        const alerts = generateAlerts(patient.heart_rate, patient.oxygen);
+        
+        return `
+          <tr>
+            <td class="patient-id">${patient.patient_id}</td>
+            <td class="timestamp">${formatTimestamp(patient.timestamp)}</td>
+            <td class="vital-value ${alertLevel}">${patient.heart_rate} BPM</td>
+            <td class="vital-value ${alertLevel}">${patient.oxygen}%</td>
+            <td>
+              <span class="status-badge ${alertLevel}">
+                <span class="status-dot"></span>
+                ${alertLevel.charAt(0).toUpperCase() + alertLevel.slice(1)}
+              </span>
+            </td>
+            <td>${alerts}</td>
+          </tr>
+        `;
+      }).join('');
+      
+      updatePagination();
+    }
+
+    function updatePagination() {
+      totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+      
+      elements.prevPage.disabled = currentPage === 1;
+      elements.nextPage.disabled = currentPage === totalPages;
+      
+      elements.paginationInfo.textContent = 
+        `Page ${currentPage} of ${totalPages} (${filteredData.length} total records)`;
+    }
+
+    function updateResultsCount() {
+      const count = filteredData.length;
+      elements.resultsCount.textContent = 
+        `Showing ${count} record${count !== 1 ? 's' : ''} of ${allPatientData.length} total`;
+    }
+
+    // Data fetching
+    async function fetchPatientData() {
+      showLoading();
+      
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Failed to fetch data');
+        
+        const json = await response.json();
+        allPatientData = json.data || json;
+        
+        // Sort by timestamp (newest first)
+        allPatientData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        applyFilters();
+        
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        showError();
+      }
+    }
+
+    // Filtering
+    function applyFilters() {
+      const filters = {
+        patientId: elements.patientIdFilter.value.toLowerCase(),
+        status: elements.statusFilter.value,
+        dateFrom: elements.dateFrom.value,
+        dateTo: elements.dateTo.value,
+        hrMin: elements.hrMin.value,
+        hrMax: elements.hrMax.value,
+        o2Min: elements.o2Min.value,
+        o2Max: elements.o2Max.value
+      };
+
+      filteredData = allPatientData.filter(patient => {
+        // Patient ID filter
+        if (filters.patientId && !patient.patient_id.toLowerCase().includes(filters.patientId)) {
+          return false;
+        }
+        
+        // Status filter
+        if (filters.status !== 'all') {
+          const alertLevel = getAlertLevel(patient.heart_rate, patient.oxygen);
+          if (alertLevel !== filters.status) return false;
+        }
+        
+        // Date range filter
+        const patientDate = new Date(patient.timestamp).toISOString().split('T')[0];
+        if (filters.dateFrom && patientDate < filters.dateFrom) return false;
+        if (filters.dateTo && patientDate > filters.dateTo) return false;
+        
+        // Heart rate range filter
+        const hr = parseInt(patient.heart_rate);
+        if (filters.hrMin && hr < parseInt(filters.hrMin)) return false;
+        if (filters.hrMax && hr > parseInt(filters.hrMax)) return false;
+        
+        // Oxygen range filter
+        const o2 = parseInt(patient.oxygen);
+        if (filters.o2Min && o2 < parseInt(filters.o2Min)) return false;
+        if (filters.o2Max && o2 > parseInt(filters.o2Max)) return false;
+        
+        return true;
+      });
+
+      currentPage = 1;
+      renderTable(filteredData);
+      updateResultsCount();
+    }
+
+    function clearFilters() {
+      elements.patientIdFilter.value = '';
+      elements.statusFilter.value = 'all';
+      elements.dateFrom.value = '';
+      elements.dateTo.value = '';
+      elements.hrMin.value = '';
+      elements.hrMax.value = '';
+      elements.o2Min.value = '';
+      elements.o2Max.value = '';
+      
+      applyFilters();
+    }
+
+    // Export functionality
+    function exportToCSV() {
+      const headers = ['Patient ID', 'Timestamp', 'Heart Rate', 'Oxygen Level', 'Status', 'Alerts'];
+      const csvContent = [
+        headers.join(','),
+        ...filteredData.map(patient => {
+          const alertLevel = getAlertLevel(patient.heart_rate, patient.oxygen);
+          const alerts = generateAlerts(patient.heart_rate, patient.oxygen);
+          
+          return [
+            patient.patient_id,
+            formatTimestamp(patient.timestamp),
+            patient.heart_rate,
+            patient.oxygen,
+            alertLevel,
+            alerts
+          ].join(',');
+        })
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `patient_history_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Event listeners
+    function setupEventListeners() {
+      elements.applyFilters.addEventListener('click', applyFilters);
+      elements.clearFilters.addEventListener('click', clearFilters);
+      elements.exportBtn.addEventListener('click', exportToCSV);
+      
+      elements.backBtn.addEventListener('click', () => {
+        window.history.back();
+      });
+      
+      elements.logoutBtn.addEventListener('click', () => {
+        if (window.parent && window.parent.logout) {
+          window.parent.logout();
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+      
+      // Pagination
+      elements.prevPage.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable(filteredData);
+        }
+      });
+      
+      elements.nextPage.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable(filteredData);
+        }
+      });
+      
+      // Real-time filtering
+      elements.patientIdFilter.addEventListener('input', applyFilters);
+      elements.statusFilter.addEventListener('change', applyFilters);
+      elements.dateFrom.addEventListener('change', applyFilters);
+      elements.dateTo.addEventListener('change', applyFilters);
+    }
+
+    // Initialize
+    function init() {
+      setupEventListeners();
+      fetchPatientData();
+    }
+
+    // Start the application
+    document.addEventListener('DOMContentLoaded', init);
+
+  </script>
+  <script>
+  document.getElementById('back-btn').addEventListener('click', function() {
+  window.location.href = 'dashboard.html';
+});
+
+</script>
+</body>
+</html>
